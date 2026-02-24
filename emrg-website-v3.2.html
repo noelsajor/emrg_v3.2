@@ -1,0 +1,2454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="EMRG — Founder-led ecommerce performance studio. We design the brand, build the store, and engineer the growth system." data-i18n-attr="content:meta.description">
+<title>EMRG — Ecommerce Performance Studio</title>
+<meta property="og:title" content="EMRG — Ecommerce Performance Studio">
+<meta property="og:description" content="We design the brand. We build the store. We engineer the growth system." data-i18n-attr="content:meta.og_description">
+<meta property="og:type" content="website">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"EMRG","url":"https://emrg.studio","email":"hello@emrg.studio"}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===================== BASE ===================== */
+:root {
+  --void: #020408;
+  --deep: #060c12;
+  --surface: #0b1520;
+  --rim: rgba(255,255,255,0.06);
+  --rim2: rgba(255,255,255,0.12);
+  --teal: #00e5c8;
+  --teal-dim: rgba(0,229,200,0.15);
+  --teal-glow: rgba(0,229,200,0.06);
+  --amber: #ff9500;
+  --white: #ffffff;
+  --smoke: rgba(255,255,255,0.55);
+  --mist: rgba(255,255,255,0.25);
+  --fog: rgba(255,255,255,0.1);
+  --title: 'Bebas Neue', Impact, sans-serif;
+  --body: 'Outfit', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; overflow: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+  html { overflow: auto; }
+  #scroll-container { overflow: auto; height: auto; }
+  .scene { position: relative; height: auto; min-height: 100vh; opacity: 1 !important; transform: none !important; }
+  #canvas-bg { display: none; }
+}
+
+body {
+  background: var(--void);
+  color: var(--white);
+  font-family: var(--body);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  cursor: none;
+}
+
+/* Custom cursor */
+#cursor {
+  position: fixed;
+  width: 12px; height: 12px;
+  background: var(--teal);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%,-50%);
+  transition: width 0.2s, height 0.2s, background 0.2s, opacity 0.2s;
+  mix-blend-mode: screen;
+}
+#cursor-ring {
+  position: fixed;
+  width: 40px; height: 40px;
+  border: 1px solid rgba(0,229,200,0.4);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%,-50%);
+  transition: width 0.4s cubic-bezier(.2,1,.2,1), height 0.4s cubic-bezier(.2,1,.2,1), border-color 0.3s;
+}
+body.hovering #cursor { width: 6px; height: 6px; }
+body.hovering #cursor-ring { width: 60px; height: 60px; border-color: rgba(0,229,200,0.7); }
+
+/* Three.js canvas */
+#canvas-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Grain overlay */
+#grain {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+/* Progress bar */
+#progress-bar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--teal), var(--amber));
+  z-index: 5000;
+  width: 0%;
+  transition: width 0.1s linear;
+  box-shadow: 0 0 12px var(--teal);
+}
+
+/* Scene dots nav */
+#scene-nav {
+  position: fixed;
+  right: 32px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+}
+.scene-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--fog);
+  border: 1px solid rgba(255,255,255,0.2);
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(.2,1,.2,1);
+  position: relative;
+}
+.scene-dot::after {
+  content: attr(data-label);
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--body);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--smoke);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+.scene-dot:hover::after { opacity: 1; }
+.scene-dot.active {
+  background: var(--teal);
+  width: 8px; height: 8px;
+  box-shadow: 0 0 12px var(--teal);
+  border-color: var(--teal);
+}
+
+/* NAV */
+#nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 500;
+  padding: 28px 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#nav::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(2,4,8,0.8), transparent);
+  pointer-events: none;
+  z-index: -1;
+}
+.nav-logo {
+  font-family: var(--title);
+  font-size: 2rem;
+  letter-spacing: 0.08em;
+  color: var(--white);
+  cursor: pointer;
+}
+.nav-logo span { color: var(--teal); }
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+.nav-links a {
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--smoke);
+  text-decoration: none;
+  transition: color 0.25s;
+}
+.nav-links a:hover { color: var(--white); }
+.nav-cta {
+  padding: 10px 24px;
+  background: transparent;
+  border: 1px solid var(--teal);
+  color: var(--teal);
+  font-family: var(--body);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.25s, color 0.25s;
+  text-decoration: none;
+}
+.nav-cta:hover { background: var(--teal); color: var(--void); }
+
+/* Scroll hint */
+#scroll-hint {
+  position: fixed;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  opacity: 1;
+  transition: opacity 0.6s;
+}
+#scroll-hint.hidden { opacity: 0; pointer-events: none; }
+.scroll-hint-text {
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--fog);
+}
+.scroll-hint-line {
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, var(--teal), transparent);
+  animation: linefall 1.8s ease-in-out infinite;
+}
+@keyframes linefall {
+  0% { transform: scaleY(0); transform-origin: top; opacity: 0; }
+  50% { transform: scaleY(1); transform-origin: top; opacity: 1; }
+  51% { transform: scaleY(1); transform-origin: bottom; opacity: 1; }
+  100% { transform: scaleY(0); transform-origin: bottom; opacity: 0; }
+}
+
+/* ===================== SCROLL ENGINE ===================== */
+#scroll-container {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+}
+
+/* Each scene is full-viewport, absolutely stacked */
+.scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: none; /* JS handles transitions */
+  will-change: opacity, transform;
+}
+.scene.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ===================== SCENE CONTENT ===================== */
+
+/* ---- HERO ---- */
+#scene-0 {
+  flex-direction: column;
+  text-align: center;
+  padding: 0 40px;
+}
+.hero-eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--teal);
+  margin-bottom: 28px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.7s 0.1s, transform 0.7s 0.1s;
+}
+.scene.active .hero-eyebrow { opacity: 1; transform: translateY(0); }
+
+.hero-title {
+  font-family: var(--title);
+  font-size: clamp(4rem, 11vw, 10rem);
+  line-height: 0.92;
+  letter-spacing: 0.04em;
+  color: var(--white);
+  margin-bottom: 32px;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.9s 0.2s, transform 0.9s 0.2s;
+}
+.scene.active .hero-title { opacity: 1; transform: translateY(0); }
+.hero-title .accent { color: var(--teal); }
+
+.hero-sub {
+  font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+  color: var(--smoke);
+  max-width: 480px;
+  line-height: 1.7;
+  margin: 0 auto 48px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s 0.4s, transform 0.8s 0.4s;
+}
+.scene.active .hero-sub { opacity: 1; transform: translateY(0); }
+
+.hero-cta-row {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s 0.55s, transform 0.8s 0.55s;
+}
+.scene.active .hero-cta-row { opacity: 1; transform: translateY(0); }
+
+.hero-chips {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 48px;
+  opacity: 0;
+  transition: opacity 0.8s 0.7s;
+}
+.scene.active .hero-chips { opacity: 1; }
+.chip-pill {
+  padding: 6px 18px;
+  border: 1px solid var(--rim2);
+  border-radius: 100px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mist);
+}
+
+/* ---- TRUST ---- */
+#scene-1 { flex-direction: column; padding: 0 80px; }
+.scene-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--teal);
+  margin-bottom: 16px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.6s 0.05s, transform 0.6s 0.05s;
+}
+.scene.active .scene-label { opacity: 1; transform: none; }
+.scene-title {
+  font-family: var(--title);
+  font-size: clamp(3rem, 7vw, 6rem);
+  line-height: 0.95;
+  letter-spacing: 0.04em;
+  margin-bottom: 64px;
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.8s 0.15s, transform 0.8s 0.15s;
+}
+.scene.active .scene-title { opacity: 1; transform: none; }
+.scene-title em { font-style: normal; color: var(--teal); }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  width: 100%;
+  max-width: 1100px;
+  border: 1px solid var(--rim2);
+}
+.stat-cell {
+  padding: 40px 36px;
+  border-right: 1px solid var(--rim2);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s, transform 0.7s;
+}
+.stat-cell:last-child { border-right: none; }
+.scene.active .stat-cell:nth-child(1) { opacity: 1; transform: none; transition-delay: 0.2s; }
+.scene.active .stat-cell:nth-child(2) { opacity: 1; transform: none; transition-delay: 0.3s; }
+.scene.active .stat-cell:nth-child(3) { opacity: 1; transform: none; transition-delay: 0.4s; }
+.scene.active .stat-cell:nth-child(4) { opacity: 1; transform: none; transition-delay: 0.5s; }
+.stat-figure {
+  font-family: var(--title);
+  font-size: clamp(2.8rem, 5vw, 4.5rem);
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+.stat-figure span { color: var(--teal); }
+.stat-desc {
+  font-size: 0.75rem;
+  color: var(--smoke);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.5;
+}
+.stat-note {
+  font-size: 0.62rem;
+  color: var(--fog);
+  letter-spacing: 0.06em;
+  margin-top: 32px;
+  opacity: 0;
+  transition: opacity 0.6s 0.7s;
+}
+.scene.active .stat-note { opacity: 1; }
+
+/* ---- PILLARS ---- */
+#scene-2 { flex-direction: column; padding: 120px 80px 80px; align-items: flex-start; }
+.pillars-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 80px;
+  width: 100%;
+  max-width: 1100px;
+  align-items: start;
+}
+.pillars-left { padding-top: 8px; }
+.pillars-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.pillar-row {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 24px;
+  align-items: start;
+  padding: 28px 0;
+  border-bottom: 1px solid var(--rim);
+  opacity: 0;
+  transform: translateX(30px);
+  transition: opacity 0.7s, transform 0.7s, border-color 0.3s;
+  cursor: default;
+}
+.pillar-row:first-child { border-top: 1px solid var(--rim); }
+.pillar-row:hover { border-bottom-color: var(--teal); }
+.scene.active .pillar-row:nth-child(1) { opacity: 1; transform: none; transition-delay: 0.2s; }
+.scene.active .pillar-row:nth-child(2) { opacity: 1; transform: none; transition-delay: 0.35s; }
+.scene.active .pillar-row:nth-child(3) { opacity: 1; transform: none; transition-delay: 0.5s; }
+.pillar-num {
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: var(--teal);
+  padding-top: 4px;
+  font-weight: 600;
+}
+.pillar-name {
+  font-family: var(--title);
+  font-size: 1.8rem;
+  letter-spacing: 0.06em;
+  color: var(--white);
+  margin-bottom: 8px;
+  line-height: 1;
+}
+.pillar-items-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+.pillar-tag {
+  font-size: 0.7rem;
+  color: var(--smoke);
+  letter-spacing: 0.04em;
+}
+.pillar-tag::before { content: '— '; color: var(--teal); }
+.pillar-cta-link {
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mist);
+  padding-top: 4px;
+  white-space: nowrap;
+  transition: color 0.25s;
+}
+.pillar-row:hover .pillar-cta-link { color: var(--teal); }
+
+/* ---- WORK ---- */
+#scene-3 { flex-direction: column; padding: 120px 80px 60px; align-items: flex-start; overflow: hidden; }
+.work-scroll-track {
+  display: flex;
+  gap: 24px;
+  margin-top: 48px;
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 8px;
+  cursor: grab;
+}
+.work-scroll-track::-webkit-scrollbar { display: none; }
+.work-scroll-track.grabbing { cursor: grabbing; }
+.case-card-imm {
+  flex-shrink: 0;
+  width: 340px;
+  border: 1px solid var(--rim2);
+  background: rgba(11,21,32,0.6);
+  backdrop-filter: blur(12px);
+  padding: 36px;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s, transform 0.7s, border-color 0.3s, background 0.3s;
+}
+.scene.active .case-card-imm:nth-child(1) { opacity: 1; transform: none; transition-delay: 0.2s; }
+.scene.active .case-card-imm:nth-child(2) { opacity: 1; transform: none; transition-delay: 0.35s; }
+.scene.active .case-card-imm:nth-child(3) { opacity: 1; transform: none; transition-delay: 0.5s; }
+.case-card-imm:hover { border-color: var(--teal); background: rgba(0,229,200,0.04); }
+.case-tag-imm {
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--teal);
+  margin-bottom: 16px;
+}
+.case-brand-imm {
+  font-family: var(--title);
+  font-size: 2.4rem;
+  letter-spacing: 0.06em;
+  color: var(--white);
+  margin-bottom: 8px;
+  line-height: 1;
+}
+.case-desc-imm {
+  font-size: 0.8rem;
+  color: var(--smoke);
+  line-height: 1.7;
+  margin-bottom: 28px;
+  letter-spacing: 0.01em;
+}
+.case-metrics-imm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 24px;
+  border-top: 1px solid var(--rim);
+}
+.case-metric-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.case-metric-val {
+  font-family: var(--title);
+  font-size: 1.5rem;
+  letter-spacing: 0.06em;
+  color: var(--teal);
+}
+.case-metric-lbl {
+  font-size: 0.68rem;
+  color: var(--smoke);
+  letter-spacing: 0.06em;
+  text-align: right;
+}
+.drag-hint {
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fog);
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  transition: opacity 0.6s 0.8s;
+}
+.scene.active .drag-hint { opacity: 1; }
+.drag-hint::before, .drag-hint::after { content: ''; flex: 1; height: 1px; background: var(--rim2); }
+
+/* ---- PROCESS ---- */
+#scene-4 { padding: 120px 80px 80px; align-items: flex-start; }
+.process-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 100px;
+  width: 100%;
+  max-width: 1100px;
+  align-items: center;
+}
+.process-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.process-step-item {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 20px;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--rim);
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: opacity 0.6s, transform 0.6s;
+}
+.scene.active .process-step-item:nth-child(1) { opacity: 1; transform: none; transition-delay: 0.15s; }
+.scene.active .process-step-item:nth-child(2) { opacity: 1; transform: none; transition-delay: 0.28s; }
+.scene.active .process-step-item:nth-child(3) { opacity: 1; transform: none; transition-delay: 0.41s; }
+.scene.active .process-step-item:nth-child(4) { opacity: 1; transform: none; transition-delay: 0.54s; }
+.process-num-large {
+  font-family: var(--title);
+  font-size: 2.4rem;
+  color: var(--teal);
+  opacity: 0.3;
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+.process-step-title {
+  font-family: var(--title);
+  font-size: 1.3rem;
+  letter-spacing: 0.06em;
+  color: var(--white);
+  margin-bottom: 6px;
+}
+.process-step-desc {
+  font-size: 0.78rem;
+  color: var(--smoke);
+  line-height: 1.7;
+  letter-spacing: 0.01em;
+}
+.process-right {
+  opacity: 0;
+  transform: translateX(30px);
+  transition: opacity 0.9s 0.3s, transform 0.9s 0.3s;
+}
+.scene.active .process-right { opacity: 1; transform: none; }
+.process-visual {
+  width: 100%;
+  aspect-ratio: 1;
+  max-width: 380px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Animated rings */
+.ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid;
+  animation: spin linear infinite;
+}
+.ring-1 { width: 100%; height: 100%; border-color: rgba(0,229,200,0.08); animation-duration: 40s; }
+.ring-2 { width: 75%; height: 75%; border-color: rgba(0,229,200,0.12); animation-duration: 28s; animation-direction: reverse; }
+.ring-3 { width: 50%; height: 50%; border-color: rgba(0,229,200,0.2); animation-duration: 18s; }
+.ring-4 { width: 25%; height: 25%; border-color: rgba(0,229,200,0.35); animation-duration: 10s; animation-direction: reverse; }
+.ring-core {
+  width: 12%;
+  height: 12%;
+  background: var(--teal);
+  border-radius: 50%;
+  box-shadow: 0 0 30px var(--teal), 0 0 60px rgba(0,229,200,0.3);
+  animation: pulse-core 2s ease-in-out infinite;
+}
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes pulse-core { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.7; } }
+
+/* Ring dots */
+.ring::after {
+  content: '';
+  position: absolute;
+  width: 6px; height: 6px;
+  background: var(--teal);
+  border-radius: 50%;
+  top: -3px; left: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 0 8px var(--teal);
+}
+
+/* ---- PACKAGES ---- */
+#scene-5 { flex-direction: column; padding: 100px 80px 60px; overflow: hidden; }
+.packages-inner {
+  width: 100%;
+  max-width: 1100px;
+}
+.platform-toggle-imm {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--rim2);
+  margin-bottom: 40px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.6s 0.1s, transform 0.6s 0.1s;
+}
+.scene.active .platform-toggle-imm { opacity: 1; transform: none; }
+.tog-btn {
+  padding: 9px 24px;
+  font-family: var(--body);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: transparent;
+  color: var(--smoke);
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s;
+  border-right: 1px solid var(--rim2);
+}
+.tog-btn:last-child { border-right: none; }
+.tog-btn.active { background: var(--teal); color: var(--void); }
+.pkg-grid-imm {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  width: 100%;
+}
+.pkg-card-imm {
+  border: 1px solid var(--rim2);
+  background: rgba(11,21,32,0.5);
+  backdrop-filter: blur(16px);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s, transform 0.7s, border-color 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.pkg-card-imm::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--teal), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.pkg-card-imm:hover::before { opacity: 1; }
+.pkg-card-imm:hover { border-color: rgba(0,229,200,0.3); }
+.pkg-card-imm.featured { border-color: var(--teal); background: rgba(0,229,200,0.05); }
+.pkg-card-imm.featured::before { opacity: 1; }
+.scene.active .pkg-card-imm:nth-child(1) { opacity: 1; transform: none; transition-delay: 0.2s; }
+.scene.active .pkg-card-imm:nth-child(2) { opacity: 1; transform: none; transition-delay: 0.32s; }
+.scene.active .pkg-card-imm:nth-child(3) { opacity: 1; transform: none; transition-delay: 0.44s; }
+.pkg-pop-tag {
+  position: absolute;
+  top: 0; right: 24px;
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: var(--teal);
+  color: var(--void);
+  padding: 3px 10px;
+}
+.pkg-name-imm {
+  font-family: var(--title);
+  font-size: 1.6rem;
+  letter-spacing: 0.06em;
+  color: var(--white);
+  margin-bottom: 6px;
+}
+.pkg-for-imm {
+  font-size: 0.75rem;
+  color: var(--smoke);
+  line-height: 1.6;
+  margin-bottom: 20px;
+  letter-spacing: 0.01em;
+}
+.pkg-price-imm {
+  font-family: var(--title);
+  font-size: 2rem;
+  color: var(--white);
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+.pkg-time-imm {
+  font-size: 0.65rem;
+  color: var(--teal);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+.pkg-divider-imm { height: 1px; background: var(--rim2); margin-bottom: 20px; }
+.pkg-feats-imm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  margin-bottom: 24px;
+}
+.pkg-feat-imm {
+  font-size: 0.75rem;
+  color: var(--smoke);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+}
+.pkg-feat-imm::before {
+  content: '›';
+  color: var(--teal);
+  flex-shrink: 0;
+  font-size: 0.9rem;
+  line-height: 1.3;
+}
+.btn-pkg-imm {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid var(--rim2);
+  color: var(--smoke);
+  font-family: var(--body);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.btn-pkg-imm:hover, .pkg-card-imm.featured .btn-pkg-imm {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: var(--void);
+}
+
+/* ---- TESTIMONIALS ---- */
+#scene-6 { flex-direction: column; padding: 120px 80px 80px; }
+.testi-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  width: 100%;
+  max-width: 1100px;
+  margin-top: 48px;
+}
+.testi-card-imm {
+  border: 1px solid var(--rim2);
+  background: rgba(11,21,32,0.5);
+  backdrop-filter: blur(12px);
+  padding: 36px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s, transform 0.7s, border-color 0.3s;
+}
+.testi-card-imm:hover { border-color: rgba(0,229,200,0.3); }
+.scene.active .testi-card-imm:nth-child(1) { opacity: 1; transform: none; transition-delay: 0.2s; }
+.scene.active .testi-card-imm:nth-child(2) { opacity: 1; transform: none; transition-delay: 0.32s; }
+.scene.active .testi-card-imm:nth-child(3) { opacity: 1; transform: none; transition-delay: 0.44s; }
+.scene.active .testi-card-imm:nth-child(4) { opacity: 1; transform: none; transition-delay: 0.56s; }
+.testi-mark-imm {
+  font-family: var(--title);
+  font-size: 3rem;
+  color: var(--teal);
+  opacity: 0.3;
+  line-height: 0.7;
+  margin-bottom: 16px;
+  letter-spacing: 0;
+}
+.testi-q-imm {
+  font-size: 0.84rem;
+  line-height: 1.8;
+  color: var(--smoke);
+  margin-bottom: 24px;
+  letter-spacing: 0.01em;
+}
+.testi-by-imm {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--white);
+}
+.testi-role-imm {
+  font-size: 0.68rem;
+  color: var(--mist);
+  margin-top: 2px;
+  letter-spacing: 0.04em;
+}
+
+/* ---- FAQ ---- */
+#scene-7 { padding: 100px 80px; align-items: flex-start; overflow-y: auto; }
+.faq-layout-imm {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 80px;
+  width: 100%;
+  max-width: 1100px;
+}
+.faq-left-imm {
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: opacity 0.7s 0.1s, transform 0.7s 0.1s;
+}
+.scene.active .faq-left-imm { opacity: 1; transform: none; }
+.faq-contact-imm {
+  margin-top: 28px;
+  font-size: 0.78rem;
+  color: var(--smoke);
+  line-height: 1.7;
+}
+.faq-contact-imm a { color: var(--teal); }
+.faq-list-imm {
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity 0.7s 0.2s, transform 0.7s 0.2s;
+}
+.scene.active .faq-list-imm { opacity: 1; transform: none; }
+.faq-item-imm { border-bottom: 1px solid var(--rim2); }
+.faq-btn-imm {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 0;
+  background: none;
+  border: none;
+  color: var(--white);
+  font-family: var(--body);
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  transition: color 0.25s;
+}
+.faq-btn-imm:hover { color: var(--teal); }
+.faq-btn-imm[aria-expanded="true"] { color: var(--teal); }
+.faq-icon-imm {
+  width: 22px; height: 22px;
+  border: 1px solid var(--rim2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.9rem;
+  color: var(--smoke);
+  transition: transform 0.3s, background 0.3s, border-color 0.3s;
+}
+.faq-btn-imm[aria-expanded="true"] .faq-icon-imm {
+  transform: rotate(45deg);
+  background: var(--teal);
+  border-color: var(--teal);
+  color: var(--void);
+}
+.faq-ans-imm { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(.4,0,.2,1); }
+.faq-ans-imm.open { max-height: 300px; }
+.faq-ans-inner-imm {
+  padding-bottom: 20px;
+  font-size: 0.8rem;
+  color: var(--smoke);
+  line-height: 1.8;
+  letter-spacing: 0.01em;
+  max-width: 560px;
+}
+
+/* ---- CTA ---- */
+#scene-8 { flex-direction: column; text-align: center; padding: 0 40px; }
+.cta-title-imm {
+  font-family: var(--title);
+  font-size: clamp(3.5rem, 9vw, 8rem);
+  line-height: 0.93;
+  letter-spacing: 0.04em;
+  color: var(--white);
+  margin-bottom: 28px;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.9s 0.1s, transform 0.9s 0.1s;
+}
+.cta-title-imm em { font-style: normal; color: var(--teal); }
+.scene.active .cta-title-imm { opacity: 1; transform: none; }
+.cta-sub-imm {
+  font-size: 1rem;
+  color: var(--smoke);
+  max-width: 440px;
+  margin: 0 auto 48px;
+  line-height: 1.7;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.7s 0.3s, transform 0.7s 0.3s;
+}
+.scene.active .cta-sub-imm { opacity: 1; transform: none; }
+.cta-btns-imm {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.7s 0.45s, transform 0.7s 0.45s;
+}
+.scene.active .cta-btns-imm { opacity: 1; transform: none; }
+.btn-glow {
+  padding: 16px 36px;
+  background: var(--teal);
+  color: var(--void);
+  font-family: var(--body);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s;
+  text-decoration: none;
+  display: inline-block;
+  box-shadow: 0 0 30px rgba(0,229,200,0.3);
+}
+.btn-glow:hover { box-shadow: 0 0 60px rgba(0,229,200,0.5); transform: translateY(-2px); }
+.btn-rim-imm {
+  padding: 16px 36px;
+  background: transparent;
+  color: var(--white);
+  font-family: var(--body);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border: 1px solid var(--rim2);
+  cursor: pointer;
+  transition: border-color 0.25s, color 0.25s;
+  text-decoration: none;
+  display: inline-block;
+}
+.btn-rim-imm:hover { border-color: var(--teal); color: var(--teal); }
+.cta-note-imm {
+  font-size: 0.65rem;
+  color: var(--fog);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 32px;
+  opacity: 0;
+  transition: opacity 0.6s 0.6s;
+}
+.scene.active .cta-note-imm { opacity: 1; }
+
+/* FOOTER inside CTA scene */
+.footer-strip {
+  position: absolute;
+  bottom: 0;
+  left: 0; right: 0;
+  border-top: 1px solid var(--rim);
+  padding: 20px 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(2,4,8,0.7);
+  backdrop-filter: blur(10px);
+}
+.footer-logo-sm {
+  font-family: var(--title);
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  color: var(--white);
+}
+.footer-logo-sm span { color: var(--teal); }
+.footer-links-sm {
+  display: flex;
+  gap: 24px;
+}
+.footer-links-sm a {
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fog);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-links-sm a:hover { color: var(--smoke); }
+.footer-copy-sm {
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  color: var(--fog);
+}
+
+/* Buttons shared */
+.btn-primary-imm {
+  padding: 13px 28px;
+  background: var(--teal);
+  color: var(--void);
+  font-family: var(--body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s;
+  text-decoration: none;
+  display: inline-block;
+}
+.btn-primary-imm:hover { background: rgba(0,229,200,0.85); }
+.btn-outline-imm {
+  padding: 13px 28px;
+  background: transparent;
+  color: var(--white);
+  font-family: var(--body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid var(--rim2);
+  cursor: pointer;
+  transition: border-color 0.25s, color 0.25s;
+  text-decoration: none;
+  display: inline-block;
+}
+.btn-outline-imm:hover { border-color: var(--teal); color: var(--teal); }
+
+/* Mobile fallback notice */
+@media (max-width: 768px) {
+  #nav { padding: 20px 24px; }
+  .nav-links { display: none; }
+  .nav-cta { padding: 9px 18px; }
+  #scene-nav { right: 14px; }
+  .scene-dot::after { display: none; }
+
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .stat-cell:nth-child(2) { border-right: none; }
+  .stat-cell { padding: 24px 20px; }
+
+  .pillars-layout { grid-template-columns: 1fr; gap: 32px; }
+  #scene-2 { padding: 100px 24px 60px; overflow-y: auto; }
+
+  .work-scroll-track { padding: 0 0 12px; }
+  .case-card-imm { width: 280px; padding: 24px; }
+  #scene-3 { padding: 100px 24px 60px; }
+
+  .process-layout { grid-template-columns: 1fr; gap: 40px; }
+  .process-visual { display: none; }
+  #scene-4 { padding: 100px 24px 60px; overflow-y: auto; }
+
+  .pkg-grid-imm { grid-template-columns: 1fr; }
+  #scene-5 { padding: 80px 24px 60px; overflow-y: auto; }
+
+  .testi-layout { grid-template-columns: 1fr; }
+  #scene-6 { padding: 100px 24px 60px; overflow-y: auto; }
+
+  .faq-layout-imm { grid-template-columns: 1fr; gap: 32px; }
+  #scene-7 { padding: 80px 24px 60px; }
+
+  .cta-title-imm { font-size: 3rem; }
+  .footer-strip { padding: 16px 24px; flex-wrap: wrap; gap: 12px; }
+  .hero-title { font-size: 3.5rem; }
+  #scene-0 { padding: 0 24px; }
+}
+
+/* ===================== I18N TOGGLES ===================== */
+.lang-toggle-imm {
+  margin-left: 14px;
+  padding: 10px 14px;
+  background: transparent;
+  border: 1px solid var(--rim2);
+  color: var(--smoke);
+  font-family: var(--body);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.25s, color 0.25s, background 0.25s;
+}
+.lang-toggle-imm:hover { border-color: var(--teal); color: var(--teal); }
+
+.nav-menu-btn-imm {
+  display: none;
+  padding: 10px 14px;
+  background: transparent;
+  border: 1px solid var(--rim2);
+  color: var(--smoke);
+  font-family: var(--body);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.25s, color 0.25s;
+  margin-right: 10px;
+}
+.nav-menu-btn-imm:hover { border-color: var(--teal); color: var(--teal); }
+
+.mobile-menu-imm {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: none;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 96px 24px 24px;
+  background: rgba(2,4,8,0.6);
+  backdrop-filter: blur(8px);
+}
+.mobile-menu-imm.open { display: flex; }
+.mobile-menu-panel-imm {
+  width: min(360px, 100%);
+  border: 1px solid var(--rim2);
+  background: rgba(11,21,32,0.85);
+  backdrop-filter: blur(16px);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.mobile-menu-links-imm { display: flex; flex-direction: column; gap: 12px; }
+.mobile-menu-link-imm {
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--smoke);
+  text-decoration: none;
+  transition: color 0.25s;
+}
+.mobile-menu-link-imm:hover { color: var(--white); }
+.mobile-menu-actions-imm { display: flex; gap: 12px; align-items: center; }
+.mobile-menu-close-imm { padding: 12px 16px; }
+
+@media (max-width: 768px) {
+  .nav-menu-btn-imm { display: inline-flex; align-items: center; justify-content: center; }
+  .lang-toggle-imm { margin-left: 10px; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- Cursor -->
+<div id="cursor" aria-hidden="true"></div>
+<div id="cursor-ring" aria-hidden="true"></div>
+
+<!-- Three.js canvas -->
+<canvas id="canvas-bg" aria-hidden="true"></canvas>
+
+<!-- Grain -->
+<div id="grain" aria-hidden="true"></div>
+
+<!-- Progress bar -->
+<div id="progress-bar" role="progressbar" aria-label="Page progress" aria-valuemin="0" aria-valuemax="100" data-i18n-attr="aria-label:aria.page_progress"></div>
+
+<!-- Scene nav dots -->
+<nav id="scene-nav" aria-label="Section navigation" data-i18n-attr="aria-label:aria.section_nav">
+  <button class="scene-dot active" data-index="0" data-label="Home" aria-label="Go to Home" data-i18n-attr="data-label:dots.home_label|aria-label:dots.home_aria"></button>
+  <button class="scene-dot" data-index="1" data-label="Results" aria-label="Go to Results" data-i18n-attr="data-label:dots.results_label|aria-label:dots.results_aria"></button>
+  <button class="scene-dot" data-index="2" data-label="Services" aria-label="Go to Services" data-i18n-attr="data-label:dots.services_label|aria-label:dots.services_aria"></button>
+  <button class="scene-dot" data-index="3" data-label="Work" aria-label="Go to Work" data-i18n-attr="data-label:dots.work_label|aria-label:dots.work_aria"></button>
+  <button class="scene-dot" data-index="4" data-label="Process" aria-label="Go to Process" data-i18n-attr="data-label:dots.process_label|aria-label:dots.process_aria"></button>
+  <button class="scene-dot" data-index="5" data-label="Packages" aria-label="Go to Packages" data-i18n-attr="data-label:dots.packages_label|aria-label:dots.packages_aria"></button>
+  <button class="scene-dot" data-index="6" data-label="Testimonials" aria-label="Go to Testimonials" data-i18n-attr="data-label:dots.testimonials_label|aria-label:dots.testimonials_aria"></button>
+  <button class="scene-dot" data-index="7" data-label="FAQ" aria-label="Go to FAQ" data-i18n-attr="data-label:dots.faq_label|aria-label:dots.faq_aria"></button>
+  <button class="scene-dot" data-index="8" data-label="Contact" aria-label="Go to Contact" data-i18n-attr="data-label:dots.contact_label|aria-label:dots.contact_aria"></button>
+</nav>
+
+<!-- NAV -->
+<header>
+  <nav id="nav" aria-label="Main navigation" data-i18n-attr="aria-label:aria.main_nav">
+    <div class="nav-logo" onclick="goToScene(0)" role="link" tabindex="0" aria-label="EMRG home" data-i18n-attr="aria-label:aria.emrg_home">EM<span>R</span>G</div>
+    <ul class="nav-links" role="list">
+      <li><a href="#" onclick="goToScene(2);return false;" data-i18n="nav.services">Services</a></li>
+      <li><a href="#" onclick="goToScene(3);return false;" data-i18n="nav.work">Work</a></li>
+      <li><a href="#" onclick="goToScene(4);return false;" data-i18n="nav.process">Process</a></li>
+      <li><a href="#" onclick="goToScene(5);return false;" data-i18n="nav.packages">Packages</a></li>
+      <li><a href="#" onclick="goToScene(7);return false;" data-i18n="nav.faq">FAQ</a></li>
+    </ul>
+    <button class="nav-menu-btn-imm" id="mobile-menu-btn-imm" type="button" aria-label="Open menu" data-i18n="nav.menu" data-i18n-attr="aria-label:aria.open_menu">Menu</button>
+    <button class="lang-toggle-imm" id="lang-toggle-desktop" type="button" aria-label="Switch language" data-i18n-attr="aria-label:aria.switch_lang">EN</button>
+    <a href="#" class="nav-cta" onclick="goToScene(8);return false;" data-i18n="nav.book_call">Book a Call</a>
+  </nav>
+</header>
+
+<!-- Mobile menu -->
+<div class="mobile-menu-imm" id="mobile-menu-imm" aria-hidden="true">
+  <div class="mobile-menu-panel-imm" role="dialog" aria-modal="true" aria-label="Menu" data-i18n-attr="aria-label:aria.mobile_menu">
+    <div class="mobile-menu-links-imm" role="list">
+      <a href="#" role="listitem" onclick="goToScene(2);closeMobileMenu();return false;" class="mobile-menu-link-imm" data-i18n="nav.services">Services</a>
+      <a href="#" role="listitem" onclick="goToScene(3);closeMobileMenu();return false;" class="mobile-menu-link-imm" data-i18n="nav.work">Work</a>
+      <a href="#" role="listitem" onclick="goToScene(4);closeMobileMenu();return false;" class="mobile-menu-link-imm" data-i18n="nav.process">Process</a>
+      <a href="#" role="listitem" onclick="goToScene(5);closeMobileMenu();return false;" class="mobile-menu-link-imm" data-i18n="nav.packages">Packages</a>
+      <a href="#" role="listitem" onclick="goToScene(7);closeMobileMenu();return false;" class="mobile-menu-link-imm" data-i18n="nav.faq">FAQ</a>
+    </div>
+    <div class="mobile-menu-actions-imm">
+      <button class="lang-toggle-imm" id="lang-toggle-mobile" type="button" aria-label="Switch language" data-i18n-attr="aria-label:aria.switch_lang">EN</button>
+      <button class="btn-outline-imm mobile-menu-close-imm" type="button" onclick="closeMobileMenu()" aria-label="Close menu" data-i18n="nav.close" data-i18n-attr="aria-label:aria.close_menu">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Scroll hint -->
+<div id="scroll-hint" aria-hidden="true">
+  <span class="scroll-hint-text" data-i18n="scroll.hint">Scroll to explore</span>
+  <div class="scroll-hint-line"></div>
+</div>
+
+<!-- ===================== SCENES ===================== -->
+<div id="scroll-container">
+
+  <!-- SCENE 0: HERO -->
+  <section class="scene active" id="scene-0" aria-labelledby="hero-h1" role="main">
+    <p class="hero-eyebrow" data-i18n="hero.eyebrow">Founder-Led Ecommerce Performance Studio</p>
+    <h1 class="hero-title" id="hero-h1" data-i18n="hero.title" data-i18n-html="true">
+      We Design.<br>We Build.<br>We <span class="accent">Engineer.</span>
+    </h1>
+    <p class="hero-sub" data-i18n="hero.sub">End-to-end ecommerce execution — brand identity, store engineering, and growth infrastructure for DTC brands built to win.</p>
+    <div class="hero-cta-row">
+      <a href="#" class="btn-primary-imm" onclick="goToScene(8);return false;" data-i18n="hero.cta_book">Book a 15-min Call →</a>
+      <a href="#" class="btn-outline-imm" onclick="goToScene(3);return false;" data-i18n="hero.cta_work">View Work</a>
+    </div>
+    <div class="hero-chips" role="list">
+      <span class="chip-pill" role="listitem" data-i18n="hero.chip1">7-Day Launch</span>
+      <span class="chip-pill" role="listitem" data-i18n="hero.chip2">CRO-First Execution</span>
+      <span class="chip-pill" role="listitem" data-i18n="hero.chip3">Built for Scale</span>
+    </div>
+  </section>
+
+  <!-- SCENE 1: TRUST -->
+  <section class="scene" id="scene-1" aria-labelledby="trust-h">
+    <div class="scene-label" data-i18n="trust.label">By the numbers</div>
+    <h2 class="scene-title" id="trust-h" data-i18n="trust.title" data-i18n-html="true">Results that<br><em>compound.</em></h2>
+    <div class="stats-grid" role="list">
+      <div class="stat-cell" role="listitem">
+        <div class="stat-figure">25<span>+</span></div>
+        <div class="stat-desc" data-i18n="trust.stat1">Ecommerce builds delivered</div>
+      </div>
+      <div class="stat-cell" role="listitem">
+        <div class="stat-figure">5<span>–7</span></div>
+        <div class="stat-desc" data-i18n="trust.stat2">Day average launch</div>
+      </div>
+      <div class="stat-cell" role="listitem">
+        <div class="stat-figure"><span>+</span>22<span>%</span></div>
+        <div class="stat-desc" data-i18n="trust.stat3">Average CVR improvement</div>
+      </div>
+      <div class="stat-cell" role="listitem">
+        <div class="stat-figure">100<span>%</span></div>
+        <div class="stat-desc" data-i18n="trust.stat4">Conversion-focused by default</div>
+      </div>
+    </div>
+    <p class="stat-note" data-i18n="trust.note">Results vary by business, product, and market conditions.</p>
+  </section>
+
+  <!-- SCENE 2: PILLARS -->
+  <section class="scene" id="scene-2" aria-labelledby="pillars-h">
+    <div class="scene-label" data-i18n="pillars.label">What we do</div>
+    <h2 class="scene-title" id="pillars-h" data-i18n="pillars.title" data-i18n-html="true">Three pillars.<br><em>One system.</em></h2>
+    <div class="pillars-layout">
+      <div class="pillars-left">
+        <p style="font-size:0.85rem;color:var(--smoke);line-height:1.8;letter-spacing:0.01em;" data-i18n="pillars.sub">Every engagement covers what moves the needle. Brand, store, and growth infrastructure — as one integrated system.</p>
+      </div>
+      <div class="pillars-right" role="list">
+        <div class="pillar-row" role="listitem">
+          <div class="pillar-num">01</div>
+          <div>
+            <div class="pillar-name" data-i18n="pillars.p1.title">Brand &amp; Packaging</div>
+            <div class="pillar-items-list">
+              <span class="pillar-tag" data-i18n="pillars.p1.tag1">Brand identity</span>
+              <span class="pillar-tag" data-i18n="pillars.p1.tag2">Packaging design</span>
+              <span class="pillar-tag" data-i18n="pillars.p1.tag3">Visual systems</span>
+              <span class="pillar-tag" data-i18n="pillars.p1.tag4">Product storytelling</span>
+            </div>
+          </div>
+          <div class="pillar-cta-link" data-i18n="pillars.start">Start →</div>
+        </div>
+        <div class="pillar-row" role="listitem">
+          <div class="pillar-num">02</div>
+          <div>
+            <div class="pillar-name" data-i18n="pillars.p2.title">Ecommerce Engineering</div>
+            <div class="pillar-items-list">
+              <span class="pillar-tag" data-i18n="pillars.p2.tag1">Shopify / WooCommerce</span>
+              <span class="pillar-tag" data-i18n="pillars.p2.tag2">PDP systems</span>
+              <span class="pillar-tag" data-i18n="pillars.p2.tag3">Pixel &amp; analytics</span>
+              <span class="pillar-tag" data-i18n="pillars.p2.tag4">SEO foundation</span>
+            </div>
+          </div>
+          <div class="pillar-cta-link" data-i18n="pillars.start">Start →</div>
+        </div>
+        <div class="pillar-row" role="listitem">
+          <div class="pillar-num">03</div>
+          <div>
+            <div class="pillar-name" data-i18n="pillars.p3.title">Growth Systems</div>
+            <div class="pillar-items-list">
+              <span class="pillar-tag" data-i18n="pillars.p3.tag1">Email &amp; SMS flows</span>
+              <span class="pillar-tag" data-i18n="pillars.p3.tag2">Post-purchase</span>
+              <span class="pillar-tag" data-i18n="pillars.p3.tag3">Loyalty &amp; referrals</span>
+              <span class="pillar-tag" data-i18n="pillars.p3.tag4">CRO sprints</span>
+            </div>
+          </div>
+          <div class="pillar-cta-link" data-i18n="pillars.start">Start →</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCENE 3: WORK -->
+  <section class="scene" id="scene-3" aria-labelledby="work-h">
+    <div class="scene-label" data-i18n="work.label">Featured work</div>
+    <h2 class="scene-title" id="work-h" data-i18n="work.title" data-i18n-html="true">Outcomes,<br><em>not outputs.</em></h2>
+    <div class="work-scroll-track" id="work-track" role="list">
+      <article class="case-card-imm" role="listitem" aria-labelledby="c1">
+        <div class="case-tag-imm" data-i18n="work.c1.tag">Shopify · Brand Identity</div>
+        <div class="case-brand-imm" id="c1">Solera</div>
+        <p class="case-desc-imm" data-i18n="work.c1.desc">Entering a saturated skincare market with no digital presence. Needed a brand and store capable of converting cold traffic from day one.</p>
+        <div class="case-metrics-imm">
+          <div class="case-metric-row"><span class="case-metric-val">+28%</span><span class="case-metric-lbl" data-i18n="work.c1.m1" data-i18n-html="true">CVR vs<br>industry avg</span></div>
+          <div class="case-metric-row"><span class="case-metric-val">6 days</span><span class="case-metric-lbl" data-i18n="work.c1.m2" data-i18n-html="true">Launch<br>timeline</span></div>
+          <div class="case-metric-row"><span class="case-metric-val">+19%</span><span class="case-metric-lbl" data-i18n="work.c1.m3" data-i18n-html="true">AOV<br>lift</span></div>
+        </div>
+      </article>
+      <article class="case-card-imm" role="listitem" aria-labelledby="c2">
+        <div class="case-tag-imm" data-i18n="work.c2.tag">WooCommerce · Growth Systems</div>
+        <div class="case-brand-imm" id="c2">Varka</div>
+        <p class="case-desc-imm" data-i18n="work.c2.desc">Existing store suffering from slow load times, poor mobile UX, and no post-purchase retention system. Rebuilt from the ground up.</p>
+        <div class="case-metrics-imm">
+          <div class="case-metric-row"><span class="case-metric-val">-42%</span><span class="case-metric-lbl" data-i18n="work.c2.m1" data-i18n-html="true">Page load<br>time</span></div>
+          <div class="case-metric-row"><span class="case-metric-val">+22%</span><span class="case-metric-lbl" data-i18n="work.c2.m2" data-i18n-html="true">Repeat purchase<br>rate</span></div>
+          <div class="case-metric-row"><span class="case-metric-val">+14%</span><span class="case-metric-lbl" data-i18n="work.c2.m3">AOV</span></div>
+        </div>
+      </article>
+      <article class="case-card-imm" role="listitem" aria-labelledby="c3">
+        <div class="case-tag-imm" data-i18n="work.c3.tag">Shopify · Brand · CRO</div>
+        <div class="case-brand-imm" id="c3">Dune</div>
+        <p class="case-desc-imm" data-i18n="work.c3.desc">Apparel brand pivoting from wholesale to DTC. Needed a flagship store and full brand system built for conversion from day one.</p>
+        <div class="case-metrics-imm">
+          <div class="case-metric-row"><span class="case-metric-val">+34%</span><span class="case-metric-lbl" data-i18n="work.c3.m1" data-i18n-html="true">CVR<br>improvement</span></div>
+          <div class="case-metric-row"><span class="case-metric-val">7 days</span><span class="case-metric-lbl" data-i18n="work.c3.m2" data-i18n-html="true">Full<br>launch</span></div>
+          <div class="case-metric-row"><span class="case-metric-val">3.8x</span><span class="case-metric-lbl" data-i18n="work.c3.m3" data-i18n-html="true">ROAS<br>month 1</span></div>
+        </div>
+      </article>
+    </div>
+    <p class="drag-hint" data-i18n="work.drag">Drag to explore</p>
+  </section>
+
+  <!-- SCENE 4: PROCESS -->
+  <section class="scene" id="scene-4" aria-labelledby="process-h">
+    <div class="process-layout">
+      <div>
+        <div class="scene-label" data-i18n="process.label">How we work</div>
+        <h2 class="scene-title" id="process-h" style="margin-bottom:40px;" data-i18n="process.title" data-i18n-html="true">Zero to live.<br><em>Days, not months.</em></h2>
+        <div class="process-steps" role="list">
+          <div class="process-step-item" role="listitem">
+            <div class="process-num-large">01</div>
+            <div>
+              <div class="process-step-title" data-i18n="process.s1.title">Audit &amp; Strategy</div>
+              <p class="process-step-desc" data-i18n="process.s1.desc">We assess brand, market, competitors, and conversion opportunities. Clear direction before a single pixel is designed.</p>
+            </div>
+          </div>
+          <div class="process-step-item" role="listitem">
+            <div class="process-num-large">02</div>
+            <div>
+              <div class="process-step-title" data-i18n="process.s2.title">Brand &amp; UX Direction</div>
+              <p class="process-step-desc" data-i18n="process.s2.desc">Identity, visual language, and store architecture defined. Conversion logic at every decision.</p>
+            </div>
+          </div>
+          <div class="process-step-item" role="listitem">
+            <div class="process-num-large">03</div>
+            <div>
+              <div class="process-step-title" data-i18n="process.s3.title">Build &amp; Integration</div>
+              <p class="process-step-desc" data-i18n="process.s3.desc">Store built, pixels fired, flows configured, SEO laid. Everything tested before it touches a customer.</p>
+            </div>
+          </div>
+          <div class="process-step-item" role="listitem">
+            <div class="process-num-large">04</div>
+            <div>
+              <div class="process-step-title" data-i18n="process.s4.title">Launch &amp; Optimize</div>
+              <p class="process-step-desc" data-i18n="process.s4.desc">Go live with confidence. We monitor, iterate, and optimize based on real data — not assumptions.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="process-right">
+        <div class="process-visual" aria-hidden="true">
+          <div class="ring ring-1"></div>
+          <div class="ring ring-2"></div>
+          <div class="ring ring-3"></div>
+          <div class="ring ring-4"></div>
+          <div class="ring-core"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCENE 5: PACKAGES -->
+  <section class="scene" id="scene-5" aria-labelledby="packages-h">
+    <div class="packages-inner">
+      <div class="scene-label" data-i18n="packages.label">Packages</div>
+      <h2 class="scene-title" id="packages-h" style="margin-bottom:8px;" data-i18n="packages.title" data-i18n-html="true">Productized.<br><em>Predictable.</em></h2>
+
+      <div class="platform-toggle-imm" role="group" aria-label="Select platform" data-i18n-attr="aria-label:aria.select_platform">
+        <button class="tog-btn active" id="tbS" aria-pressed="true">Shopify</button>
+        <button class="tog-btn" id="tbW" aria-pressed="false">WooCommerce</button>
+      </div>
+
+      <div class="pkg-grid-imm">
+        <article class="pkg-card-imm" aria-labelledby="pk1">
+          <h3 class="pkg-name-imm" id="pk1" data-i18n="packages.p1.name">Launch Sprint</h3>
+          <p class="pkg-for-imm" data-i18n="packages.p1.for">For brands launching their first DTC store.</p>
+          <div class="pkg-price-imm">$4,500+</div>
+          <div class="pkg-time-imm" id="pk1-time" data-i18n="packages.p1.time_shopify">5–7 day Shopify launch</div>
+          <div class="pkg-divider-imm"></div>
+          <div class="pkg-feats-imm" id="pk1-feats">
+            <div class="pkg-feat-imm">Custom Shopify theme build</div>
+            <div class="pkg-feat-imm">Up to 5 pages</div>
+            <div class="pkg-feat-imm">Pixel setup (Meta, GA4)</div>
+            <div class="pkg-feat-imm">SEO foundation</div>
+            <div class="pkg-feat-imm">Performance optimization</div>
+            <div class="pkg-feat-imm">Welcome email flow</div>
+            <div class="pkg-feat-imm">2 rounds of revisions</div>
+          </div>
+          <button class="btn-pkg-imm" onclick="goToScene(8)" data-i18n="packages.book">Book a Call →</button>
+        </article>
+
+        <article class="pkg-card-imm featured" aria-labelledby="pk2">
+          <div class="pkg-pop-tag" data-i18n="packages.popular">Most Popular</div>
+          <h3 class="pkg-name-imm" id="pk2" data-i18n="packages.p2.name">Growth Sprint</h3>
+          <p class="pkg-for-imm" data-i18n="packages.p2.for">Full-stack execution for brands ready to scale.</p>
+          <div class="pkg-price-imm">$9,500+</div>
+          <div class="pkg-time-imm" id="pk2-time" data-i18n="packages.p2.time_shopify">Full Shopify build · 10–14 days</div>
+          <div class="pkg-divider-imm"></div>
+          <div class="pkg-feats-imm" id="pk2-feats">
+            <div class="pkg-feat-imm">Everything in Launch Sprint</div>
+            <div class="pkg-feat-imm">Brand identity &amp; packaging</div>
+            <div class="pkg-feat-imm">Full pixel suite (Meta, GA4, TikTok)</div>
+            <div class="pkg-feat-imm">Post-purchase email + SMS flows</div>
+            <div class="pkg-feat-imm">CRO audit &amp; UX sprint</div>
+            <div class="pkg-feat-imm">Loyalty &amp; referral setup</div>
+            <div class="pkg-feat-imm">30-day post-launch support</div>
+          </div>
+          <button class="btn-pkg-imm" onclick="goToScene(8)" data-i18n="packages.book">Book a Call →</button>
+        </article>
+
+        <article class="pkg-card-imm" aria-labelledby="pk3">
+          <h3 class="pkg-name-imm" id="pk3" data-i18n="packages.p3.name">Growth Partner</h3>
+          <p class="pkg-for-imm" data-i18n="packages.p3.for">Ongoing senior-level execution, month to month.</p>
+          <div class="pkg-price-imm">$3,000+<span style="font-size:1rem;color:var(--smoke);font-weight:300;" data-i18n="packages.mo">/mo</span></div>
+          <div class="pkg-time-imm" data-i18n="packages.p3.time">Ongoing · minimum 3 months</div>
+          <div class="pkg-divider-imm"></div>
+          <div class="pkg-feats-imm">
+            <div class="pkg-feat-imm">Monthly CRO sprints</div>
+            <div class="pkg-feat-imm">Email &amp; SMS optimization</div>
+            <div class="pkg-feat-imm">Growth reporting &amp; analytics</div>
+            <div class="pkg-feat-imm">Store updates &amp; landing pages</div>
+            <div class="pkg-feat-imm">Affiliate &amp; referral management</div>
+            <div class="pkg-feat-imm">Priority support</div>
+            <div class="pkg-feat-imm">Quarterly strategy reviews</div>
+          </div>
+          <button class="btn-pkg-imm" onclick="goToScene(8)" data-i18n="packages.book">Book a Call →</button>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCENE 6: TESTIMONIALS -->
+  <section class="scene" id="scene-6" aria-labelledby="testi-h">
+    <div class="scene-label" data-i18n="testi.label">What founders say</div>
+    <h2 class="scene-title" id="testi-h" data-i18n="testi.title" data-i18n-html="true">Trusted by<br><em>builders.</em></h2>
+    <div class="testi-layout" role="list">
+      <article class="testi-card-imm" role="listitem">
+        <div class="testi-mark-imm" aria-hidden="true">"</div>
+        <p class="testi-q-imm" data-i18n="testi.q1">We went from idea to live Shopify store in 6 days. The build quality and attention to conversion detail was unlike anything I had seen. First week traffic converted at nearly 4%.</p>
+        <div class="testi-by-imm">Jordan L.</div>
+        <div class="testi-role-imm" data-i18n="testi.r1">Founder, Solera Skincare</div>
+      </article>
+      <article class="testi-card-imm" role="listitem">
+        <div class="testi-mark-imm" aria-hidden="true">"</div>
+        <p class="testi-q-imm" data-i18n="testi.q2">They rebuilt our WooCommerce store and set up our email flows in under two weeks. Page speed improved dramatically. Repeat purchase rate climbed month over month.</p>
+        <div class="testi-by-imm">Aliya S.</div>
+        <div class="testi-role-imm" data-i18n="testi.r2">Head of Marketing, Varka Nutrition</div>
+      </article>
+      <article class="testi-card-imm" role="listitem">
+        <div class="testi-mark-imm" aria-hidden="true">"</div>
+        <p class="testi-q-imm" data-i18n="testi.q3">EMRG doesn't feel like an agency. They work like a senior partner who actually cares about what happens after launch. The growth system they set up is still paying dividends six months later.</p>
+        <div class="testi-by-imm">Marcus K.</div>
+        <div class="testi-role-imm" data-i18n="testi.r3">Founder, Dune Apparel</div>
+      </article>
+      <article class="testi-card-imm" role="listitem">
+        <div class="testi-mark-imm" aria-hidden="true">"</div>
+        <p class="testi-q-imm" data-i18n="testi.q4">We came with just a product and a rough concept. Packaging, identity, store, tracking, flows — all done. Six days later we were live and profitable by week three.</p>
+        <div class="testi-by-imm">Priya R.</div>
+        <div class="testi-role-imm" data-i18n="testi.r4">Founder, Lumos Wellness</div>
+      </article>
+    </div>
+  </section>
+
+  <!-- SCENE 7: FAQ -->
+  <section class="scene" id="scene-7" aria-labelledby="faq-h">
+    <div class="faq-layout-imm">
+      <div class="faq-left-imm">
+        <div class="scene-label" data-i18n="faq.label">FAQ</div>
+        <h2 class="scene-title" id="faq-h" style="font-size:clamp(2rem,4vw,3.5rem);" data-i18n="faq.title" data-i18n-html="true">Straight<br><em>answers.</em></h2>
+        <p class="faq-contact-imm" data-i18n="faq.contact" data-i18n-html="true">Still have something else?<br><a href="mailto:hello@emrg.studio">hello@emrg.studio</a></p>
+      </div>
+      <div class="faq-list-imm" id="faq-imm-list">
+        <div class="faq-item-imm">
+          <button class="faq-btn-imm" aria-expanded="false" aria-controls="fi1" data-i18n="faq.q1">Can you really launch in 7 days?<span class="faq-icon-imm" aria-hidden="true">+</span></button>
+          <div class="faq-ans-imm" id="fi1" role="region"><div class="faq-ans-inner-imm" data-i18n="faq.a1">Yes. Our Launch Sprint is scoped specifically for a 5–7 day delivery cycle. This requires your assets and product info ready at kickoff. Larger builds take longer — we're always transparent upfront.</div></div>
+        </div>
+        <div class="faq-item-imm">
+          <button class="faq-btn-imm" aria-expanded="false" aria-controls="fi2" data-i18n="faq.q2">What do you need from us to get started?<span class="faq-icon-imm" aria-hidden="true">+</span></button>
+          <div class="faq-ans-imm" id="fi2" role="region"><div class="faq-ans-inner-imm" data-i18n="faq.a2">For a store build: product info, existing brand assets if any, copy, and platform access. For brand work: a brief on your product, audience, and market positioning. We guide you through our onboarding process.</div></div>
+        </div>
+        <div class="faq-item-imm">
+          <button class="faq-btn-imm" aria-expanded="false" aria-controls="fi3" data-i18n="faq.q3">Do you handle packaging design?<span class="faq-icon-imm" aria-hidden="true">+</span></button>
+          <div class="faq-ans-imm" id="fi3" role="region"><div class="faq-ans-inner-imm" data-i18n="faq.a3">Yes. Brand identity and packaging are part of our Growth Sprint and available as standalone engagements. Files delivered print-ready and spec'd for your manufacturer.</div></div>
+        </div>
+        <div class="faq-item-imm">
+          <button class="faq-btn-imm" aria-expanded="false" aria-controls="fi4" data-i18n="faq.q4">Do you support existing stores?<span class="faq-icon-imm" aria-hidden="true">+</span></button>
+          <div class="faq-ans-imm" id="fi4" role="region"><div class="faq-ans-inner-imm" data-i18n="faq.a4">Absolutely. We work with established brands on CRO sprints, rebuilds, flow optimization, and growth systems. We'll audit your store and identify where revenue is being left on the table.</div></div>
+        </div>
+        <div class="faq-item-imm">
+          <button class="faq-btn-imm" aria-expanded="false" aria-controls="fi5" data-i18n="faq.q5">What about SEO?<span class="faq-icon-imm" aria-hidden="true">+</span></button>
+          <div class="faq-ans-imm" id="fi5" role="region"><div class="faq-ans-inner-imm" data-i18n="faq.a5">Every store includes SEO foundation — structured data, clean URLs, optimized meta tags, image alt text, sitemap, and page speed optimization. Ongoing SEO content is available in our Growth Partner retainer.</div></div>
+        </div>
+        <div class="faq-item-imm">
+          <button class="faq-btn-imm" aria-expanded="false" aria-controls="fi6" data-i18n="faq.q6">What happens after launch?<span class="faq-icon-imm" aria-hidden="true">+</span></button>
+          <div class="faq-ans-imm" id="fi6" role="region"><div class="faq-ans-inner-imm" data-i18n="faq.a6">Growth Sprint includes 30 days of post-launch support. After that, our Growth Partner retainer is available for brands that want continued optimization and execution. We don't disappear after handoff.</div></div>
+        </div>
+        <div class="faq-item-imm">
+          <button class="faq-btn-imm" aria-expanded="false" aria-controls="fi7" data-i18n="faq.q7">Do you manage paid ads?<span class="faq-icon-imm" aria-hidden="true">+</span></button>
+          <div class="faq-ans-imm" id="fi7" role="region"><div class="faq-ans-inner-imm" data-i18n="faq.a7">We handle the infrastructure that makes ads perform — pixel setup, tracking, landing pages, and post-click experience. We don't run campaigns, but we ensure your store converts the traffic your ads send.</div></div>
+        </div>
+        <div class="faq-item-imm">
+          <button class="faq-btn-imm" aria-expanded="false" aria-controls="fi8" data-i18n="faq.q8">How do revisions work?<span class="faq-icon-imm" aria-hidden="true">+</span></button>
+          <div class="faq-ans-imm" id="fi8" role="region"><div class="faq-ans-inner-imm" data-i18n="faq.a8">All packages include defined revision rounds (2 for Launch Sprint, 3 for Growth Sprint). Revisions are consolidated sessions. Additional rounds can be added if needed.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCENE 8: CTA -->
+  <section class="scene" id="scene-8" aria-labelledby="cta-h">
+    <p class="hero-eyebrow" style="transition-delay:0.05s;" data-i18n="cta.eyebrow">Ready to build</p>
+    <h2 class="cta-title-imm" id="cta-h" data-i18n="cta.title" data-i18n-html="true">Build something<br>that <em>converts.</em></h2>
+    <p class="cta-sub-imm" data-i18n="cta.sub">Tell us where you are. We'll show you where to go. One conversation is all it takes.</p>
+    <div class="cta-btns-imm">
+      <a href="https://cal.com/emrg" class="btn-glow" data-i18n="cta.book">Book a 15-min Call →</a>
+      <a href="mailto:hello@emrg.studio" class="btn-rim-imm" data-i18n="cta.email">Email us directly</a>
+    </div>
+    <p class="cta-note-imm" data-i18n="cta.note">We reply within 24–48 hours.</p>
+
+    <footer class="footer-strip">
+      <div class="footer-logo-sm">EM<span>R</span>G</div>
+      <div class="footer-links-sm" role="list">
+        <a href="#" role="listitem">Twitter</a>
+        <a href="#" role="listitem">Instagram</a>
+        <a href="#" role="listitem">LinkedIn</a>
+        <a href="#" role="listitem" data-i18n="footer.privacy">Privacy</a>
+        <a href="#" role="listitem" data-i18n="footer.terms">Terms</a>
+      </div>
+      <div class="footer-copy-sm" data-i18n="footer.copy">© 2025 EMRG. All rights reserved.</div>
+    </footer>
+  </section>
+
+</div><!-- /scroll-container -->
+
+<!-- Three.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+(function() {
+'use strict';
+
+const TOTAL_SCENES = 9;
+let currentScene = 0;
+let isTransitioning = false;
+const scenes = document.querySelectorAll('.scene');
+const dots = document.querySelectorAll('.scene-dot');
+const progressBar = document.getElementById('progress-bar');
+const scrollHint = document.getElementById('scroll-hint');
+
+/* ===================== SCENE NAV HELPERS ===================== */
+function updateDots() {
+  dots.forEach(d => d.classList.remove('active'));
+  const active = dots[currentScene];
+  if (active) active.classList.add('active');
+}
+
+function updateProgress() {
+  const p = (currentScene / (TOTAL_SCENES - 1)) * 100;
+  progressBar.style.width = p + '%';
+}
+
+/* ===================== SCENE TRANSITION ===================== */
+window.goToScene = function(idx) {
+  const target = Math.max(0, Math.min(TOTAL_SCENES - 1, idx));
+  if (target === currentScene || isTransitioning) return;
+  isTransitioning = true;
+
+  const prev = scenes[currentScene];
+  const next = scenes[target];
+
+  prev.classList.remove('active');
+  next.classList.add('active');
+
+  currentScene = target;
+  updateDots();
+  updateProgress();
+
+  if (currentScene > 0) scrollHint.classList.add('hidden');
+  else scrollHint.classList.remove('hidden');
+
+  // allow transitions to settle
+  setTimeout(() => { isTransitioning = false; }, 550);
+};
+
+/* ===================== DOT CLICKS ===================== */
+dots.forEach(dot => {
+  dot.addEventListener('click', () => {
+    const idx = parseInt(dot.getAttribute('data-index'), 10);
+    if (!Number.isNaN(idx)) window.goToScene(idx);
+  });
+});
+
+/* ===================== KEYBOARD NAV ===================== */
+window.addEventListener('keydown', (e) => {
+  if (isTransitioning) return;
+  if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+    e.preventDefault();
+    window.goToScene(currentScene + 1);
+  }
+  if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+    e.preventDefault();
+    window.goToScene(currentScene - 1);
+  }
+});
+
+/* ===================== WHEEL / TOUCH SCROLL ===================== */
+let wheelLock = false;
+window.addEventListener('wheel', (e) => {
+  if (wheelLock || isTransitioning) return;
+  wheelLock = true;
+
+  if (e.deltaY > 0) window.goToScene(currentScene + 1);
+  else if (e.deltaY < 0) window.goToScene(currentScene - 1);
+
+  setTimeout(() => { wheelLock = false; }, 650);
+}, { passive: false });
+
+let touchStartY = 0;
+window.addEventListener('touchstart', (e) => {
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+window.addEventListener('touchend', (e) => {
+  const endY = e.changedTouches[0].clientY;
+  const diff = touchStartY - endY;
+  if (Math.abs(diff) < 45) return;
+  if (diff > 0) window.goToScene(currentScene + 1);
+  else window.goToScene(currentScene - 1);
+}, { passive: true });
+
+/* ===================== CUSTOM CURSOR ===================== */
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+let cx = window.innerWidth / 2;
+let cy = window.innerHeight / 2;
+let rx = cx;
+let ry = cy;
+
+window.addEventListener('mousemove', (e) => {
+  cx = e.clientX;
+  cy = e.clientY;
+  cursor.style.left = cx + 'px';
+  cursor.style.top = cy + 'px';
+});
+
+function animateRing() {
+  rx += (cx - rx) * 0.14;
+  ry += (cy - ry) * 0.14;
+  ring.style.left = rx + 'px';
+  ring.style.top = ry + 'px';
+  requestAnimationFrame(animateRing);
+}
+animateRing();
+
+function setHovering(state) {
+  if (state) document.body.classList.add('hovering');
+  else document.body.classList.remove('hovering');
+}
+
+document.querySelectorAll('a, button, .scene-dot, .nav-logo').forEach(el => {
+  el.addEventListener('mouseenter', () => setHovering(true));
+  el.addEventListener('mouseleave', () => setHovering(false));
+});
+
+/* Make nav logo keyboard-activatable */
+document.querySelector('.nav-logo').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    window.goToScene(0);
+  }
+});
+
+/* ===================== WORK SCROLLER DRAG ===================== */
+const track = document.getElementById('work-track');
+let isDown = false;
+let startX = 0;
+let scrollLeft = 0;
+
+if (track) {
+  track.addEventListener('mousedown', (e) => {
+    isDown = true;
+    track.classList.add('grabbing');
+    startX = e.pageX - track.offsetLeft;
+    scrollLeft = track.scrollLeft;
+  });
+  track.addEventListener('mouseleave', () => {
+    isDown = false;
+    track.classList.remove('grabbing');
+  });
+  track.addEventListener('mouseup', () => {
+    isDown = false;
+    track.classList.remove('grabbing');
+  });
+  track.addEventListener('mousemove', (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.pageX - track.offsetLeft;
+    const walk = (x - startX) * 1.2;
+    track.scrollLeft = scrollLeft - walk;
+  });
+}
+
+/* ===================== FAQ ACCORDION ===================== */
+document.querySelectorAll('.faq-btn-imm').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const expanded = btn.getAttribute('aria-expanded') === 'true';
+    const controls = btn.getAttribute('aria-controls');
+    const panel = document.getElementById(controls);
+    if (!panel) return;
+
+    // close others
+    document.querySelectorAll('.faq-btn-imm').forEach(b => {
+      if (b !== btn) b.setAttribute('aria-expanded', 'false');
+    });
+    document.querySelectorAll('.faq-ans-imm').forEach(p => {
+      if (p !== panel) p.classList.remove('open');
+    });
+
+    btn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+    panel.classList.toggle('open', !expanded);
+  });
+});
+
+/* ===================== THREE.JS BACKGROUND ===================== */
+let renderer, scene3d, camera, mesh, clock;
+
+function initThree() {
+  const canvas = document.getElementById('canvas-bg');
+  renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  scene3d = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.z = 4.2;
+
+  clock = new THREE.Clock();
+
+  // Subtle animated plane with shader-like gradient using vertex colors
+  const geo = new THREE.PlaneGeometry(8, 8, 80, 80);
+  const mat = new THREE.MeshBasicMaterial({
+    color: 0x00e5c8,
+    transparent: true,
+    opacity: 0.07,
+    wireframe: true
+  });
+  mesh = new THREE.Mesh(geo, mat);
+  mesh.rotation.x = -0.65;
+  mesh.position.y = -0.4;
+  scene3d.add(mesh);
+}
+
+function animateThree() {
+  requestAnimationFrame(animateThree);
+  const t = clock.getElapsedTime();
+  if (mesh && mesh.geometry && mesh.geometry.attributes && mesh.geometry.attributes.position) {
+    const pos = mesh.geometry.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i);
+      const y = pos.getY(i);
+      const z = Math.sin(x * 0.8 + t * 0.8) * 0.08 + Math.cos(y * 0.9 + t * 0.7) * 0.08;
+      pos.setZ(i, z);
+    }
+    pos.needsUpdate = true;
+  }
+  if (mesh) mesh.rotation.z = t * 0.03;
+  if (renderer && scene3d && camera) renderer.render(scene3d, camera);
+}
+
+/* ===================== PACKAGE PLATFORM TOGGLE ===================== */
+const tS = document.getElementById('tbS');
+const tW = document.getElementById('tbW');
+
+const pData = {
+  shopify: {
+    p1: { time: '5–7 day Shopify launch', feats: ['Custom Shopify theme build', 'Up to 5 pages', 'Pixel setup (Meta, GA4)', 'SEO foundation', 'Performance optimization', 'Welcome email flow', '2 rounds of revisions'] },
+    p2: { time: 'Full Shopify build · 10–14 days', feats: ['Everything in Launch Sprint', 'Brand identity &amp; packaging', 'Full pixel suite (Meta, GA4, TikTok)', 'Post-purchase email + SMS flows', 'CRO audit &amp; UX sprint', 'Loyalty &amp; referral setup', '30-day post-launch support'] }
+  },
+  woo: {
+    p1: { time: '5–7 day WooCommerce launch', feats: ['Custom WooCommerce build', 'Up to 5 pages', 'Pixel setup (Meta, GA4)', 'WooCommerce performance tuning', 'SEO foundation', 'Welcome email flow', '2 rounds of revisions'] },
+    p2: { time: 'Full WooCommerce build · 12–16 days', feats: ['Everything in Launch Sprint', 'Brand identity &amp; packaging', 'Full pixel suite (Meta, GA4, TikTok)', 'Post-purchase email + SMS flows', 'Plugin optimization &amp; CRO sprint', 'Loyalty &amp; referral setup', '30-day post-launch support'] }
+  }
+};
+
+function applyPlatform(p) {
+  const d = pData[p];
+  document.getElementById('pk1-time').textContent = d.p1.time;
+  document.getElementById('pk1-feats').innerHTML = d.p1.feats.map(f => `<div class="pkg-feat-imm">${f}</div>`).join('');
+  document.getElementById('pk2-time').textContent = d.p2.time;
+  document.getElementById('pk2-feats').innerHTML = d.p2.feats.map(f => `<div class="pkg-feat-imm">${f}</div>`).join('');
+}
+tS.addEventListener('click', () => { tS.classList.add('active'); tS.setAttribute('aria-pressed','true'); tW.classList.remove('active'); tW.setAttribute('aria-pressed','false'); applyPlatform('shopify'); });
+tW.addEventListener('click', () => { tW.classList.add('active'); tW.setAttribute('aria-pressed','true'); tS.classList.remove('active'); tS.setAttribute('aria-pressed','false'); applyPlatform('woo'); });
+
+/* ===================== RESIZE ===================== */
+window.addEventListener('resize', () => {
+  if (!renderer) return;
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+/* ===================== INIT ===================== */
+// Check for reduced motion
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+if (!reduced && typeof THREE !== 'undefined') {
+  try {
+    initThree();
+    animateThree();
+  } catch(e) {
+    console.warn('Three.js init failed:', e);
+  }
+}
+
+updateProgress();
+updateDots();
+
+})();
+</script>
+
+<script>
+(function() {
+  'use strict';
+
+  const I18N = {
+    en: {
+      meta: {
+        description: "EMRG — Founder-led ecommerce performance studio. We design the brand, build the store, and engineer the growth system.",
+        og_description: "We design the brand. We build the store. We engineer the growth system."
+      },
+      aria: {
+        page_progress: "Page progress",
+        section_nav: "Section navigation",
+        main_nav: "Main navigation",
+        emrg_home: "EMRG home",
+        open_menu: "Open menu",
+        close_menu: "Close menu",
+        mobile_menu: "Menu",
+        select_platform: "Select platform",
+        switch_lang: "Switch language"
+      },
+      dots: {
+        home_label: "Home",
+        home_aria: "Go to Home",
+        results_label: "Results",
+        results_aria: "Go to Results",
+        services_label: "Services",
+        services_aria: "Go to Services",
+        work_label: "Work",
+        work_aria: "Go to Work",
+        process_label: "Process",
+        process_aria: "Go to Process",
+        packages_label: "Packages",
+        packages_aria: "Go to Packages",
+        testimonials_label: "Testimonials",
+        testimonials_aria: "Go to Testimonials",
+        faq_label: "FAQ",
+        faq_aria: "Go to FAQ",
+        contact_label: "Contact",
+        contact_aria: "Go to Contact"
+      },
+      nav: {
+        services: "Services",
+        work: "Work",
+        process: "Process",
+        packages: "Packages",
+        faq: "FAQ",
+        book_call: "Book a Call",
+        menu: "Menu",
+        close: "Close"
+      },
+      scroll: { hint: "Scroll to explore" },
+      hero: {
+        eyebrow: "Founder-Led Ecommerce Performance Studio",
+        title: "We Design.<br>We Build.<br>We <span class=\"accent\">Engineer.</span>",
+        sub: "End-to-end ecommerce execution — brand identity, store engineering, and growth infrastructure for DTC brands built to win.",
+        cta_book: "Book a 15-min Call →",
+        cta_work: "View Work",
+        chip1: "7-Day Launch",
+        chip2: "CRO-First Execution",
+        chip3: "Built for Scale"
+      },
+      trust: {
+        label: "By the numbers",
+        title: "Results that<br><em>compound.</em>",
+        stat1: "Ecommerce builds delivered",
+        stat2: "Day average launch",
+        stat3: "Average CVR improvement",
+        stat4: "Conversion-focused by default",
+        note: "Results vary by business, product, and market conditions."
+      },
+      pillars: {
+        label: "What we do",
+        title: "Three pillars.<br><em>One system.</em>",
+        sub: "Every engagement covers what moves the needle. Brand, store, and growth infrastructure — as one integrated system.",
+        start: "Start →",
+        p1: { title: "Brand &amp; Packaging", tag1:"Brand identity", tag2:"Packaging design", tag3:"Visual systems", tag4:"Product storytelling" },
+        p2: { title: "Ecommerce Engineering", tag1:"Shopify / WooCommerce", tag2:"PDP systems", tag3:"Pixel &amp; analytics", tag4:"SEO foundation" },
+        p3: { title: "Growth Systems", tag1:"Email &amp; SMS flows", tag2:"Post-purchase", tag3:"Loyalty &amp; referrals", tag4:"CRO sprints" }
+      },
+      work: {
+        label: "Featured work",
+        title: "Outcomes,<br><em>not outputs.</em>",
+        drag: "Drag to explore",
+        c1: {
+          tag: "Shopify · Brand Identity",
+          desc: "Entering a saturated skincare market with no digital presence. Needed a brand and store capable of converting cold traffic from day one.",
+          m1: "CVR vs<br>industry avg",
+          m2: "Launch<br>timeline",
+          m3: "AOV<br>lift"
+        },
+        c2: {
+          tag: "WooCommerce · Growth Systems",
+          desc: "Existing store suffering from slow load times, poor mobile UX, and no post-purchase retention system. Rebuilt from the ground up.",
+          m1: "Page load<br>time",
+          m2: "Repeat purchase<br>rate",
+          m3: "AOV"
+        },
+        c3: {
+          tag: "Shopify · Brand · CRO",
+          desc: "Apparel brand pivoting from wholesale to DTC. Needed a flagship store and full brand system built for conversion from day one.",
+          m1: "CVR<br>improvement",
+          m2: "Full<br>launch",
+          m3: "ROAS<br>month 1"
+        }
+      },
+      process: {
+        label: "How we work",
+        title: "Zero to live.<br><em>Days, not months.</em>",
+        s1: { title: "Audit &amp; Strategy", desc: "We assess brand, market, competitors, and conversion opportunities. Clear direction before a single pixel is designed." },
+        s2: { title: "Brand &amp; UX Direction", desc: "Identity, visual language, and store architecture defined. Conversion logic at every decision." },
+        s3: { title: "Build &amp; Integration", desc: "Store built, pixels fired, flows configured, SEO laid. Everything tested before it touches a customer." },
+        s4: { title: "Launch &amp; Optimize", desc: "Go live with confidence. We monitor, iterate, and optimize based on real data — not assumptions." }
+      },
+      packages: {
+        label: "Packages",
+        title: "Productized.<br><em>Predictable.</em>",
+        popular: "Most Popular",
+        p1: { name:"Launch Sprint", for:"For brands launching their first DTC store." },
+        p2: { name:"Growth Sprint", for:"Full-stack execution for brands ready to scale." },
+        p3: { name:"Growth Partner", for:"Ongoing senior-level execution, month to month.", time:"Ongoing · minimum 3 months" },
+        mo: "/mo",
+        book: "Book a Call →",
+        platform: {
+          shopify: {
+            p1_time: "5–7 day Shopify launch",
+            p1_feats: ["Custom Shopify theme build","Up to 5 pages","Pixel setup (Meta, GA4)","SEO foundation","Performance optimization","Welcome email flow","2 rounds of revisions"],
+            p2_time: "Full Shopify build · 10–14 days",
+            p2_feats: ["Everything in Launch Sprint","Brand identity &amp; packaging","Full pixel suite (Meta, GA4, TikTok)","Post-purchase email + SMS flows","CRO audit &amp; UX sprint","Loyalty &amp; referral setup","30-day post-launch support"]
+          },
+          woo: {
+            p1_time: "5–7 day WooCommerce launch",
+            p1_feats: ["Custom WooCommerce build","Up to 5 pages","Pixel setup (Meta, GA4)","WooCommerce performance tuning","SEO foundation","Welcome email flow","2 rounds of revisions"],
+            p2_time: "Full WooCommerce build · 12–16 days",
+            p2_feats: ["Everything in Launch Sprint","Brand identity &amp; packaging","Full pixel suite (Meta, GA4, TikTok)","Post-purchase email + SMS flows","Plugin optimization &amp; CRO sprint","Loyalty &amp; referral setup","30-day post-launch support"]
+          }
+        }
+      },
+      testi: {
+        label: "What founders say",
+        title: "Trusted by<br><em>builders.</em>",
+        q1: "We went from idea to live Shopify store in 6 days. The build quality and attention to conversion detail was unlike anything I had seen. First week traffic converted at nearly 4%.",
+        q2: "They rebuilt our WooCommerce store and set up our email flows in under two weeks. Page speed improved dramatically. Repeat purchase rate climbed month over month.",
+        q3: "EMRG doesn't feel like an agency. They work like a senior partner who actually cares about what happens after launch. The growth system they set up is still paying dividends six months later.",
+        q4: "We came with just a product and a rough concept. Packaging, identity, store, tracking, flows — all done. Six days later we were live and profitable by week three.",
+        r1: "Founder, Solera Skincare",
+        r2: "Head of Marketing, Varka Nutrition",
+        r3: "Founder, Dune Apparel",
+        r4: "Founder, Lumos Wellness"
+      },
+      faq: {
+        label: "FAQ",
+        title: "Straight<br><em>answers.</em>",
+        contact: "Still have something else?<br><a href=\"mailto:hello@emrg.studio\">hello@emrg.studio</a>",
+        q1: "Can you really launch in 7 days?",
+        a1: "Yes. Our Launch Sprint is scoped specifically for a 5–7 day delivery cycle. This requires your assets and product info ready at kickoff. Larger builds take longer — we're always transparent upfront.",
+        q2: "What do you need from us to get started?",
+        a2: "For a store build: product info, existing brand assets if any, copy, and platform access. For brand work: a brief on your product, audience, and market positioning. We guide you through our onboarding process.",
+        q3: "Do you handle packaging design?",
+        a3: "Yes. Brand identity and packaging are part of our Growth Sprint and available as standalone engagements. Files delivered print-ready and spec'd for your manufacturer.",
+        q4: "Do you support existing stores?",
+        a4: "Absolutely. We work with established brands on CRO sprints, rebuilds, flow optimization, and growth systems. We'll audit your store and identify where revenue is being left on the table.",
+        q5: "What about SEO?",
+        a5: "Every store includes SEO foundation — structured data, clean URLs, optimized meta tags, image alt text, sitemap, and page speed optimization. Ongoing SEO content is available in our Growth Partner retainer.",
+        q6: "What happens after launch?",
+        a6: "Growth Sprint includes 30 days of post-launch support. After that, our Growth Partner retainer is available for brands that want continued optimization and execution. We don't disappear after handoff.",
+        q7: "Do you manage paid ads?",
+        a7: "We handle the infrastructure that makes ads perform — pixel setup, tracking, landing pages, and post-click experience. We don't run campaigns, but we ensure your store converts the traffic your ads send.",
+        q8: "How do revisions work?",
+        a8: "All packages include defined revision rounds (2 for Launch Sprint, 3 for Growth Sprint). Revisions are consolidated sessions. Additional rounds can be added if needed."
+      },
+      cta: {
+        eyebrow: "Ready to build",
+        title: "Build something<br>that <em>converts.</em>",
+        sub: "Tell us where you are. We'll show you where to go. One conversation is all it takes.",
+        book: "Book a 15-min Call →",
+        email: "Email us directly",
+        note: "We reply within 24–48 hours."
+      },
+      footer: {
+        privacy: "Privacy",
+        terms: "Terms",
+        copy: "© 2025 EMRG. All rights reserved."
+      }
+    },
+    es: {
+      meta: {
+        description: "EMRG — Estudio de performance ecommerce liderado por founders. Diseñamos la marca, construimos la tienda y desarrollamos el sistema de crecimiento.",
+        og_description: "Diseñamos la marca. Construimos la tienda. Desarrollamos el sistema de crecimiento."
+      },
+      aria: {
+        page_progress: "Progreso de página",
+        section_nav: "Navegación de secciones",
+        main_nav: "Navegación principal",
+        emrg_home: "Inicio de EMRG",
+        open_menu: "Abrir menú",
+        close_menu: "Cerrar menú",
+        mobile_menu: "Menú",
+        select_platform: "Seleccionar plataforma",
+        switch_lang: "Cambiar idioma"
+      },
+      dots: {
+        home_label: "Inicio",
+        home_aria: "Ir a Inicio",
+        results_label: "Resultados",
+        results_aria: "Ir a Resultados",
+        services_label: "Servicios",
+        services_aria: "Ir a Servicios",
+        work_label: "Work",
+        work_aria: "Ir a Work",
+        process_label: "Proceso",
+        process_aria: "Ir a Proceso",
+        packages_label: "Paquetes",
+        packages_aria: "Ir a Paquetes",
+        testimonials_label: "Testimonios",
+        testimonials_aria: "Ir a Testimonios",
+        faq_label: "FAQ",
+        faq_aria: "Ir a FAQ",
+        contact_label: "Contacto",
+        contact_aria: "Ir a Contacto"
+      },
+      nav: {
+        services: "Servicios",
+        work: "Work",
+        process: "Proceso",
+        packages: "Paquetes",
+        faq: "FAQ",
+        book_call: "Agendar llamada",
+        menu: "Menú",
+        close: "Cerrar"
+      },
+      scroll: { hint: "Desliza para explorar" },
+      hero: {
+        eyebrow: "Estudio de performance ecommerce liderado por founders",
+        title: "Diseñamos.<br>Construimos.<br><span class=\"accent\">Optimizamos.</span>",
+        sub: "Ejecución ecommerce end-to-end — identidad de marca, ingeniería de tienda e infraestructura de crecimiento para marcas DTC creadas para ganar.",
+        cta_book: "Agendar llamada de 15 min →",
+        cta_work: "Ver work",
+        chip1: "Lanzamiento en 7 días",
+        chip2: "Ejecución CRO-first",
+        chip3: "Diseñado para escalar"
+      },
+      trust: {
+        label: "En números",
+        title: "Resultados que<br><em>se acumulan.</em>",
+        stat1: "Tiendas ecommerce entregadas",
+        stat2: "Días promedio de lanzamiento",
+        stat3: "Mejora promedio de CVR",
+        stat4: "Conversión primero, por defecto",
+        note: "Los resultados varían según negocio, producto y condiciones del mercado."
+      },
+      pillars: {
+        label: "Lo que hacemos",
+        title: "Tres pilares.<br><em>Un sistema.</em>",
+        sub: "Cada engagement cubre lo que mueve la aguja: marca, tienda e infraestructura de crecimiento — como un solo sistema integrado.",
+        start: "Empezar →",
+        p1: { title: "Marca &amp; Packaging", tag1:"Identidad de marca", tag2:"Diseño de packaging", tag3:"Sistemas visuales", tag4:"Storytelling de producto" },
+        p2: { title: "Ingeniería Ecommerce", tag1:"Shopify / WooCommerce", tag2:"Sistemas de PDP", tag3:"Pixel &amp; analítica", tag4:"Base SEO" },
+        p3: { title: "Sistemas de Crecimiento", tag1:"Flows de Email &amp; SMS", tag2:"Post-compra", tag3:"Lealtad &amp; referidos", tag4:"Sprints de CRO" }
+      },
+      work: {
+        label: "Work destacado",
+        title: "Resultados,<br><em>no entregables.</em>",
+        drag: "Arrastra para explorar",
+        c1: {
+          tag: "Shopify · Identidad de marca",
+          desc: "Entrar a un mercado de skincare saturado sin presencia digital. Necesitaban una marca y una tienda capaces de convertir tráfico frío desde el día uno.",
+          m1: "CVR vs<br>promedio industria",
+          m2: "Tiempo de<br>lanzamiento",
+          m3: "AOV<br>lift"
+        },
+        c2: {
+          tag: "WooCommerce · Sistemas de crecimiento",
+          desc: "Tienda existente con carga lenta, mala UX móvil y sin retención post-compra. Reconstruida desde cero.",
+          m1: "Tiempo de carga<br>página",
+          m2: "Tasa de recompra<br>recurrente",
+          m3: "AOV"
+        },
+        c3: {
+          tag: "Shopify · Marca · CRO",
+          desc: "Marca de apparel pivotando de wholesale a DTC. Necesitaban una tienda flagship y un sistema de marca completo construido para convertir desde el día uno.",
+          m1: "Mejora<br>de CVR",
+          m2: "Lanzamiento<br>completo",
+          m3: "ROAS<br>mes 1"
+        }
+      },
+      process: {
+        label: "Cómo trabajamos",
+        title: "De cero a live.<br><em>Días, no meses.</em>",
+        s1: { title: "Auditoría &amp; Estrategia", desc: "Evaluamos marca, mercado, competidores y oportunidades de conversión. Dirección clara antes de diseñar un solo píxel." },
+        s2: { title: "Dirección de Marca &amp; UX", desc: "Definimos identidad, lenguaje visual y arquitectura de la tienda. Lógica de conversión en cada decisión." },
+        s3: { title: "Build &amp; Integración", desc: "Construimos la tienda, configuramos pixels, flujos y SEO. Todo probado antes de llegar a un cliente." },
+        s4: { title: "Lanzar &amp; Optimizar", desc: "Salimos live con confianza. Monitoreamos, iteramos y optimizamos con datos reales — no supuestos." }
+      },
+      packages: {
+        label: "Paquetes",
+        title: "Productizado.<br><em>Predecible.</em>",
+        popular: "Más popular",
+        p1: { name:"Launch Sprint", for:"Para marcas que lanzan su primera tienda DTC." },
+        p2: { name:"Growth Sprint", for:"Ejecución full-stack para marcas listas para escalar." },
+        p3: { name:"Growth Partner", for:"Ejecución senior continua, mes a mes.", time:"Continuo · mínimo 3 meses" },
+        mo: "/mes",
+        book: "Agendar llamada →",
+        platform: {
+          shopify: {
+            p1_time: "Lanzamiento Shopify · 5–7 días",
+            p1_feats: ["Build de theme Shopify a medida","Hasta 5 páginas","Setup de pixels (Meta, GA4)","Base SEO","Optimización de performance","Flow de bienvenida","2 rondas de revisiones"],
+            p2_time: "Build Shopify completo · 10–14 días",
+            p2_feats: ["Todo lo de Launch Sprint","Identidad de marca &amp; packaging","Suite completa de pixels (Meta, GA4, TikTok)","Flows post-compra Email + SMS","Auditoría CRO &amp; sprint UX","Setup de lealtad &amp; referidos","Soporte post-lanzamiento 30 días"]
+          },
+          woo: {
+            p1_time: "Lanzamiento WooCommerce · 5–7 días",
+            p1_feats: ["Build WooCommerce a medida","Hasta 5 páginas","Setup de pixels (Meta, GA4)","Tuning de performance WooCommerce","Base SEO","Flow de bienvenida","2 rondas de revisiones"],
+            p2_time: "Build WooCommerce completo · 12–16 días",
+            p2_feats: ["Todo lo de Launch Sprint","Identidad de marca &amp; packaging","Suite completa de pixels (Meta, GA4, TikTok)","Flows post-compra Email + SMS","Optimización de plugins &amp; sprint CRO","Setup de lealtad &amp; referidos","Soporte post-lanzamiento 30 días"]
+          }
+        }
+      },
+      testi: {
+        label: "Lo que dicen los founders",
+        title: "Confiado por<br><em>builders.</em>",
+        q1: "Pasamos de idea a tienda Shopify live en 6 días. La calidad del build y el nivel de detalle en conversión fue diferente a todo lo que había visto. La primera semana convertimos casi al 4%.",
+        q2: "Reconstruyeron nuestro WooCommerce y configuraron flujos de email en menos de dos semanas. La velocidad mejoró muchísimo. La recompra subió mes a mes.",
+        q3: "EMRG no se siente como una agencia. Trabajan como un partner senior que de verdad se preocupa por lo que pasa después del launch. El sistema de crecimiento que montaron sigue pagando dividendos seis meses después.",
+        q4: "Llegamos con un producto y una idea. Packaging, identidad, tienda, tracking, flows — todo listo. Seis días después estábamos live y rentables para la semana tres.",
+        r1: "Founder, Solera Skincare",
+        r2: "Head of Marketing, Varka Nutrition",
+        r3: "Founder, Dune Apparel",
+        r4: "Founder, Lumos Wellness"
+      },
+      faq: {
+        label: "FAQ",
+        title: "Respuestas<br><em>directas.</em>",
+        contact: "¿Tienes otra pregunta?<br><a href=\"mailto:hello@emrg.studio\">hello@emrg.studio</a>",
+        q1: "¿De verdad pueden lanzar en 7 días?",
+        a1: "Sí. Nuestro Launch Sprint está diseñado específicamente para un ciclo de entrega de 5–7 días. Esto requiere que tus assets e info de producto estén listos al kickoff. Builds más grandes toman más tiempo — siempre lo aclaramos desde el inicio.",
+        q2: "¿Qué necesitan de nosotros para comenzar?",
+        a2: "Para una tienda: info de producto, assets de marca (si existen), copy y accesos a la plataforma. Para marca: un brief de tu producto, audiencia y posicionamiento. Te guiamos en el onboarding.",
+        q3: "¿Hacen diseño de packaging?",
+        a3: "Sí. Identidad y packaging forman parte de Growth Sprint y también están disponibles como trabajo standalone. Entregamos archivos listos para imprenta y especificados para tu fabricante.",
+        q4: "¿Trabajan con tiendas existentes?",
+        a4: "Totalmente. Trabajamos con marcas establecidas en sprints de CRO, rebuilds, optimización de flows y sistemas de crecimiento. Auditamos tu tienda y encontramos dónde se está dejando dinero en la mesa.",
+        q5: "¿Y el SEO?",
+        a5: "Cada tienda incluye base SEO — datos estructurados, URLs limpias, meta tags optimizados, alt text, sitemap y optimización de velocidad. SEO de contenido ongoing está disponible en Growth Partner.",
+        q6: "¿Qué pasa después del launch?",
+        a6: "Growth Sprint incluye 30 días de soporte post-lanzamiento. Luego, Growth Partner está disponible para marcas que quieren optimización y ejecución continua. No desaparecemos después del handoff.",
+        q7: "¿Manejan paid ads?",
+        a7: "Nos encargamos de la infraestructura para que los ads rindan — pixels, tracking, landing pages y experiencia post-click. No corremos campañas, pero hacemos que la tienda convierta el tráfico que tus ads traen.",
+        q8: "¿Cómo funcionan las revisiones?",
+        a8: "Todos los paquetes incluyen rondas definidas de revisión (2 para Launch Sprint, 3 para Growth Sprint). Las revisiones son sesiones consolidadas. Se pueden agregar rondas extra si hace falta."
+      },
+      cta: {
+        eyebrow: "Listos para construir",
+        title: "Construye algo<br>que <em>convierta.</em>",
+        sub: "Cuéntanos dónde estás. Te mostramos a dónde ir. Una conversación es suficiente.",
+        book: "Agendar llamada de 15 min →",
+        email: "Escríbenos directo",
+        note: "Respondemos en 24–48 horas."
+      },
+      footer: {
+        privacy: "Privacidad",
+        terms: "Términos",
+        copy: "© 2025 EMRG. Todos los derechos reservados."
+      }
+    }
+  };
+
+  const STORAGE_KEY = 'emrg_lang';
+  const langButtons = [
+    document.getElementById('lang-toggle-desktop'),
+    document.getElementById('lang-toggle-mobile')
+  ].filter(Boolean);
+
+  function getByPath(obj, path) {
+    return path.split('.').reduce((acc, k) => (acc && acc[k] != null ? acc[k] : null), obj);
+  }
+
+  function setButtonLabels(lang) {
+    const label = (lang === 'es') ? 'ES' : 'EN';
+    langButtons.forEach(btn => { btn.textContent = label; });
+  }
+
+  function updatePackages(lang) {
+    const dict = I18N[lang] || I18N.en;
+    const isShopify = !!document.getElementById('tbS') && document.getElementById('tbS').classList.contains('active');
+    const platform = isShopify ? 'shopify' : 'woo';
+    const p = dict.packages && dict.packages.platform && dict.packages.platform[platform];
+    if (!p) return;
+
+    const pk1Time = document.getElementById('pk1-time');
+    const pk2Time = document.getElementById('pk2-time');
+    const pk1Feats = document.getElementById('pk1-feats');
+    const pk2Feats = document.getElementById('pk2-feats');
+
+    if (pk1Time) pk1Time.textContent = p.p1_time;
+    if (pk2Time) pk2Time.textContent = p.p2_time;
+    if (pk1Feats) pk1Feats.innerHTML = (p.p1_feats || []).map(f => `<div class="pkg-feat-imm">${f}</div>`).join('');
+    if (pk2Feats) pk2Feats.innerHTML = (p.p2_feats || []).map(f => `<div class="pkg-feat-imm">${f}</div>`).join('');
+  }
+
+  function applyLang(lang) {
+    const safeLang = (lang === 'es') ? 'es' : 'en';
+    const dict = I18N[safeLang] || I18N.en;
+
+    document.documentElement.setAttribute('lang', safeLang);
+    setButtonLabels(safeLang);
+
+    const nodes = document.querySelectorAll('[data-i18n]');
+    nodes.forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      const val = getByPath(dict, key);
+      if (val == null) return;
+
+      const useHtml = el.getAttribute('data-i18n-html') === 'true';
+      if (useHtml) el.innerHTML = val;
+      else el.textContent = val;
+    });
+
+    const attrNodes = document.querySelectorAll('[data-i18n-attr]');
+    attrNodes.forEach(el => {
+      const spec = el.getAttribute('data-i18n-attr');
+      if (!spec) return;
+      spec.split('|').map(s => s.trim()).filter(Boolean).forEach(pair => {
+        const parts = pair.split(':');
+        if (parts.length < 2) return;
+        const attr = parts[0].trim();
+        const key = parts.slice(1).join(':').trim();
+        const val = getByPath(dict, key);
+        if (val == null) return;
+        el.setAttribute(attr, val);
+      });
+    });
+
+    updatePackages(safeLang);
+  }
+
+  function detectInitialLang() {
+    const stored = (localStorage.getItem(STORAGE_KEY) || '').toLowerCase();
+    if (stored === 'en' || stored === 'es') return stored;
+    const navLang = (navigator.language || '').toLowerCase();
+    return navLang.startsWith('es') ? 'es' : 'en';
+  }
+
+  function setLang(lang) {
+    const safeLang = (lang === 'es') ? 'es' : 'en';
+    localStorage.setItem(STORAGE_KEY, safeLang);
+    applyLang(safeLang);
+  }
+
+  function toggleLang() {
+    const current = (document.documentElement.getAttribute('lang') || 'en').toLowerCase();
+    setLang(current === 'es' ? 'en' : 'es');
+  }
+
+  // Mobile menu
+  const mobileMenu = document.getElementById('mobile-menu-imm');
+  const mobileBtn = document.getElementById('mobile-menu-btn-imm');
+
+  window.closeMobileMenu = function() {
+    if (!mobileMenu) return;
+    mobileMenu.classList.remove('open');
+    mobileMenu.setAttribute('aria-hidden', 'true');
+    if (mobileBtn) mobileBtn.setAttribute('aria-expanded', 'false');
+  };
+
+  function openMobileMenu() {
+    if (!mobileMenu) return;
+    mobileMenu.classList.add('open');
+    mobileMenu.setAttribute('aria-hidden', 'false');
+    if (mobileBtn) mobileBtn.setAttribute('aria-expanded', 'true');
+    const firstLink = mobileMenu.querySelector('a,button');
+    if (firstLink) firstLink.focus();
+  }
+
+  if (mobileBtn) {
+    mobileBtn.setAttribute('aria-expanded', 'false');
+    mobileBtn.addEventListener('click', () => {
+      if (!mobileMenu) return;
+      if (mobileMenu.classList.contains('open')) window.closeMobileMenu();
+      else openMobileMenu();
+    });
+  }
+
+  if (mobileMenu) {
+    mobileMenu.addEventListener('click', (e) => {
+      if (e.target === mobileMenu) window.closeMobileMenu();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') window.closeMobileMenu();
+    });
+  }
+
+  langButtons.forEach(btn => {
+    btn.addEventListener('click', toggleLang);
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleLang(); }
+    });
+  });
+
+  // Keep translations consistent when platform toggle is used
+  const tbS = document.getElementById('tbS');
+  const tbW = document.getElementById('tbW');
+  [tbS, tbW].filter(Boolean).forEach(btn => {
+    btn.addEventListener('click', () => {
+      const current = (document.documentElement.getAttribute('lang') || 'en').toLowerCase();
+      updatePackages(current === 'es' ? 'es' : 'en');
+    });
+  });
+
+  setLang(detectInitialLang());
+})();
+</script>
+</body>
+</html>
